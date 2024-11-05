@@ -21,7 +21,7 @@
       "error",
       { "singleQuote": true, "semi": true, "endOfLine": "auto" }
     ],
-    "space-before-function-paren": ["error", "never"],
+    "space-before-function-paren": "off",
     "require-jsdoc": "off",
     "padded-blocks": "off",
     "linebreak-style": "off",
