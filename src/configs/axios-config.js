@@ -45,7 +45,7 @@ axiosInstance.interceptors.response.use(
 
     // 응답이 실패했는데, 토큰 재발급이 필요하지 않은 상황 (로그인을 애초에 하지 않음)
     // 밑에 로직이 실행되지 않도록 return
-    if (error.response.data.message === 'INVALID_AUTH') {
+    if (error.response.data.message === 'NO_LOGIN') {
       console.log('아예 로그인을 하지 않아서 재발급 요청 들어갈 수 없음!');
       return Promise.reject(error);
     }
@@ -82,13 +82,12 @@ axiosInstance.interceptors.response.use(
         // axiosInstance를 사용하여 다시 한 번 원본 요청을 보내고, 응답값은 원래 호출한 곳으로 리턴.
         return axiosInstance(originalRequest);
       } catch (e) {
-        console.log(e);
+        console.log('인터셉터가 새토큰 요청했는데, rt가 만료됨!');
         // Refresh 토큰도 만료가 된 상황 (로그아웃이 된 것처럼 보여줘야 함.)
-        localStorage.removeItem('ACCESS_TOKEN');
+        // 재발급 요청도 거절당하면 인스턴스를 호출한 곳으로 에러 정보를 리턴.
+        return Promise.reject(error);
       }
     }
-    // 재발급 요청도 거절당하면 인스턴스를 호출한 곳으로 에러 정보를 리턴.
-    return Promise.reject(error);
   },
 );
 

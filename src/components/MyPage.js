@@ -10,11 +10,15 @@ import {
   TableRow,
 } from '@mui/material';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import axiosInstance from '../configs/axios-config';
+import { useNavigate } from 'react-router-dom';
+import AuthContext from '../context/UserContext';
 
 const MyPage = () => {
   const [memberInfoList, setMemberInfoList] = useState([]);
+  const { onLogout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // 회원 정보를 불러오기
@@ -47,8 +51,15 @@ const MyPage = () => {
           },
         ]);
       } catch (e) {
-        console.log(e);
-        alert('마이페이지 조회 실패');
+        console.log('mypage의 catch문!');
+        if (e.response.data.statusMessage === 'EXPIRED_RT') {
+          alert('시간이 경과하여 재로그인이 필욜합니다.');
+          onLogout();
+          navigate('/');
+        } else if (e.response.data.message === 'NO_LOGIN') {
+          alert('까꿍');
+          navigate('/');
+        }
       }
     };
 
