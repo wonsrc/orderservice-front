@@ -6,7 +6,7 @@ const AuthContext = React.createContext({
   onLogin: () => {},
   onLogout: () => {},
   userRole: '',
-  userName: '',
+  isInit: false,
 });
 
 // 위에서 생성한 Context 제공하는 Provider 선언.
@@ -14,6 +14,17 @@ const AuthContext = React.createContext({
 export const AuthContextProvider = (props) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState('');
+  const [isInit, setIsInit] = useState(false); // 초기화 완료 상태 추가
+
+  useEffect(() => {
+    const token = localStorage.getItem('ACCESS_TOKEN');
+    if (token) {
+      setIsLoggedIn(true);
+      setUserRole();
+      setUserRole(localStorage.getItem('USER_ROLE'));
+    }
+    setIsInit(true);
+  }, []);
 
   // 로그인 핸들러
   const loginHandler = (token, id, role) => {
@@ -47,6 +58,7 @@ export const AuthContextProvider = (props) => {
         onLogin: loginHandler,
         onLogout: logoutHandler,
         userRole,
+        isInit,
       }}
     >
       {props.children}

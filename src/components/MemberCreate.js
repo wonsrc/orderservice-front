@@ -11,12 +11,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const MemberCreate = () => {
-  const [name, setName] = useState();
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
-  const [city, setCity] = useState();
-  const [street, setStreet] = useState();
-  const [zipCode, setZipcode] = useState();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [city, setCity] = useState('');
+  const [street, setStreet] = useState('');
+  const [zipcode, setZipcode] = useState('');
 
   const navigate = useNavigate();
 
@@ -30,7 +30,7 @@ const MemberCreate = () => {
       address: {
         city,
         street,
-        zipCode,
+        zipCode: zipcode,
       },
     };
 
@@ -46,7 +46,7 @@ const MemberCreate = () => {
     );
 
     if (res.status === 201) {
-      alert('회원 가입 성공!환영합니다');
+      alert('회원 가입 성공! 환영합니다!');
       navigate('/');
     } else {
       const data = await res.json();
@@ -54,8 +54,6 @@ const MemberCreate = () => {
 
       alert(data.statusMessage);
     }
-
-    console.log(res);
   };
 
   return (
@@ -107,7 +105,7 @@ const MemberCreate = () => {
               />
               <TextField
                 label='우편번호'
-                value={zipCode}
+                value={zipcode}
                 onChange={(e) => setZipcode(e.target.value)}
                 fullWidth
                 margin='normal'

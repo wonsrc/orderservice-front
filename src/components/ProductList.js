@@ -18,34 +18,102 @@ import {
 import React, { useContext, useEffect, useState } from 'react';
 import AuthContext from '../context/UserContext';
 import CartContext from '../context/CartContext';
+import axios from 'axios';
+import { throttle } from 'lodash';
 
 const ProductList = ({ pageTitle }) => {
   const [searchType, setSearchType] = useState('optional');
   const [searchValue, setSearchValue] = useState('');
   const [productList, setProductList] = useState([]);
   const [selected, setSelected] = useState({});
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isLastPage, setLastPage] = useState(false);
+  // 현재 로딩중이냐? -> 백엔드로부터 상품 목록 요청을 보내서 데이터를 받아오는 중인가?
+  const [isLoading, setIsLoading] = useState(false);
+  const pageSize = 25;
 
   const { userRole } = useContext(AuthContext);
   const { addCart } = useContext(CartContext);
   const isAdmin = userRole === 'ADMIN';
 
   useEffect(() => {
-    loadProduct();
+    loadProduct(); // 처음 화면에 진입하면 1페이지 내용을 불러오자
+    // 쓰로틀링: 짧은 시간동안 연속해서 발생한 이벤트들을 일정 시간으로 그룹화 하여
+    // 마지막 이벤트 핸들러만 호출하게 하는 기능. -> 스크롤 페이징
+    // 디바운싱: 짧은 시간동안 연속해서 발생한 이벤트를 호출하지 않다가 마지막 이벤트로부터
+    // 일정 시간 이후에 한번만 호출하게 하는 기능. -> 입력값 검증
+    const throttledScroll = throttle(scrollPagination, 1000);
+    window.addEventListener('scroll', throttledScroll);
+
+    // 클린업 함수: 다른 컴포넌트가 렌더링 될 때 이벤트 해제.
+    return () => window.removeEventListener('scroll', throttledScroll);
   }, []);
 
-  // 상품 목록을 백엔드에 요청하는 함수
-  const loadProduct = async (number, size) => {
-    const res = await fetch(
-      `${process.env.REACT_APP_API_BASE_URL}/product/list`,
-    );
+  // useEffect는 하나의 컴포넌트에서 여러 개 선언이 가능합니다.
+  // 스크롤 이벤트에서 다음 페이지 번호를 준비했고,
+  // 상태가 바뀌면 그 때 백엔드로 요청을 보낼 수 있게 로직을 나누었습니다.
+  useEffect(() => {
+    if (currentPage > 0) loadProduct();
+  }, [currentPage]);
 
-    const data = await res.json();
-    setProductList(data.result);
+  // 상품 목록을 백엔드에 요청하는 함수
+  const loadProduct = async () => {
+    // 아직 로딩 중이라면 or 이미 마지막 페이지라면 더이상 진행하지 말아라.
+    if (isLoading || isLastPage) return;
+
+    let params = {
+      size: pageSize,
+      page: currentPage,
+    };
+
+    // 사용자가 조건을 선택했고, 검색어를 입력했다면 프로퍼티를 추가하자.
+    if (searchType !== 'optional' && searchValue) {
+      params.category = searchType;
+      params.searchName = searchValue;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/product/list`,
+        { params },
+      );
+      const data = res.data;
+      console.log(data.result);
+
+      const additionalData = data.result.content.map((p) => ({
+        ...p,
+        quantity: 0,
+      }));
+
+      if (additionalData.length === 0) {
+        setLastPage(true);
+      } else {
+        setProductList((prevList) => [...prevList, ...additionalData]);
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const scrollPagination = () => {
+    // 브라우저 창의 높이 + 현재 페이지에서 스크롤 된 픽셀 값
+    //>= (스크롤이 필요 없는)페이지 전체 높이에서 100px 이내에 도달했는가?
+    const isBottom =
+      window.innerHeight + document.documentElement.scrollTop >=
+      document.documentElement.scrollHeight - 100;
+    if (isBottom && !isLastPage && !isLoading) {
+      // 스크롤이 특정 구간에 도달하면 바로 요청 보내는 게 아니라 다음 페이지 번호를 준비하겠다.
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
   };
 
   // 장바구니 클릭 이벤트 핸들러
   const handleAddToCart = () => {
-    // 특정 객체에서 key 값만 뽑아서 문자열 배열로 리턴해주는 메서드
+    // 특정 객체에서 key값만 뽑아서 문자열 배열로 리턴해주는 메서드
     const selectedProduct = Object.keys(selected);
     // key값만 뽑아서 selected에 들어있는 상품들 중에 false인 거 빼고 true인 것만 담겠다.
     const filtered = selectedProduct.filter((key) => selected[key]);
@@ -83,10 +151,19 @@ const ProductList = ({ pageTitle }) => {
   const handleCheckboxChange = (productId, checked) => {
     // 사용자가 특정 상품을 선택했는지에 대한 상태를 관리 {상품 아이디, 체크 여부}
     setSelected((prevSelected) => ({
-      prevSelected,
+      ...prevSelected,
       [productId]: checked,
     }));
-    console.log(selected);
+  };
+
+  // 검색 버튼 클릭 이벤트 핸들러 (form submit)
+  const searchBtnHandler = (e) => {
+    e.preventDefault();
+    setProductList([]);
+    setCurrentPage(0);
+    setIsLoading(false);
+    setLastPage(false);
+    loadProduct();
   };
 
   return (
@@ -98,12 +175,7 @@ const ProductList = ({ pageTitle }) => {
         className='mt-5'
       >
         <Grid item>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              loadProduct();
-            }}
-          >
+          <form onSubmit={searchBtnHandler}>
             <Grid container spacing={2}>
               <Grid item>
                 <Select

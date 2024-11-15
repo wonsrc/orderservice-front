@@ -7,19 +7,61 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../context/UserContext';
+import { EventSourcePolyfill } from 'event-source-polyfill';
+import { NotificationAdd } from '@mui/icons-material';
 
 const Header = () => {
   const { isLoggedIn, onLogout, userRole } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [liveQuantity, setLiveQuantity] = useState(0); // 실시간 주문 수
+  const [message, setMessage] = useState('');
 
   const handleLogout = () => {
     onLogout();
     alert('로그아웃 완료!');
     navigate('/');
   };
+
+  useEffect(() => {
+    console.log('role: ', userRole);
+    const token = localStorage.getItem('ACCESS_TOKEN');
+
+    if (userRole === 'ADMIN') {
+      // 알림을 받기 위해 서버와 연결을 하기 위한 요청을 하겠다. (/subscribe)
+      const sse = new EventSourcePolyfill(
+        `${process.env.REACT_APP_API_BASE_URL}/subscribe`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      sse.addEventListener('connect', (event) => {
+        console.log(event);
+      });
+
+      // 30초마다 발생하는 알림. (연결을 유지하기 위해)
+      sse.addEventListener('heartbeat', () => {
+        console.log('Received heartbeat');
+      });
+
+      sse.addEventListener('ordered', (event) => {
+        const orderData = JSON.parse(event.data);
+        console.log(orderData);
+        setLiveQuantity((prev) => prev + 1);
+        setMessage(orderData.userEmail + '님의 주문!');
+      });
+
+      sse.onerror = (error) => {
+        console.error(error);
+        sse.close();
+      };
+    }
+  }, [userRole]);
 
   return (
     <AppBar position='static'>
@@ -41,7 +83,7 @@ const Header = () => {
                     상품관리
                   </Button>
                   <Button color='inherit' href='/order/list'>
-                    실시간주문 ()
+                    실시간주문 <NotificationAdd /> ({liveQuantity}) {message}
                   </Button>
                 </>
               )}
