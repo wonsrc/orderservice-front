@@ -14,7 +14,7 @@ let backendHostName; // 백엔드 서버 호스트 이름
 if (clientHostName === 'locakhost') {
   // 개발 중
   backendHostName = 'http://locathost:8181';
-} else if (clientHostName === 'http://playdatashop92.shop') {
+} else if (clientHostName === 'playdatashop92.shop') {
   // 배포해서 현재 서비스 중
   backendHostName = 'http://3.36.13.24:8000';
 }
