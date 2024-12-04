@@ -16,6 +16,7 @@ import AuthContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import OrderListComponent from './OrderListComponent';
 import { handleAxiosError } from '../configs/HandleAxiosError';
+import { API_BASE_URL, USER } from '../configs/host-config';
 
 const MyPage = () => {
   const [memberInfoList, setMemberInfoList] = useState([]);
@@ -32,8 +33,8 @@ const MyPage = () => {
       try {
         const url =
           userRole === 'ADMIN'
-            ? `${process.env.REACT_APP_API_BASE_URL}/user/list`
-            : `${process.env.REACT_APP_API_BASE_URL}/user/myinfo`;
+            ? `${API_BASE_URL}${USER}/list`
+            : `${API_BASE_URL}${USER}/myinfo`;
 
         const res = await axiosInstance.get(url);
         /*

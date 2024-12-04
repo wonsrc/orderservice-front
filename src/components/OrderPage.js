@@ -17,6 +17,7 @@ import axios from 'axios';
 import axiosInstance from '../configs/axios-config';
 import AuthContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL, ORDER } from '../configs/host-config';
 
 const OrderPage = () => {
   const { productsInCart, clearCart } = useContext(CartContext);
@@ -68,7 +69,7 @@ const OrderPage = () => {
     // try, catch로 작성합니다. (fetch는 400번대 응답에도 예외가 발생하진 않음)
     try {
       await axiosInstance.post(
-        `${process.env.REACT_APP_API_BASE_URL}/order/create`,
+        `${API_BASE_URL}${ORDER}/order/create`,
         orderProducts,
       );
       alert('주문이 완료되었습니다.');

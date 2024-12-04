@@ -20,6 +20,7 @@ import AuthContext from '../context/UserContext';
 import CartContext from '../context/CartContext';
 import axios from 'axios';
 import { throttle } from 'lodash';
+import { API_BASE_URL, PROD } from '../configs/host-config';
 
 const ProductList = ({ pageTitle }) => {
   const [searchType, setSearchType] = useState('optional');
@@ -75,10 +76,9 @@ const ProductList = ({ pageTitle }) => {
     setIsLoading(true);
 
     try {
-      const res = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/product/list`,
-        { params },
-      );
+      const res = await axios.get(`${API_BASE_URL}${PROD}/prod-list`, {
+        params,
+      });
       const data = res.data;
       console.log(data.result);
 

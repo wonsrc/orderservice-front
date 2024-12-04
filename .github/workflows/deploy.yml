@@ -23,7 +23,7 @@ jobs:
       - name: Install Dependencies
         run: npm install # 의존성 설치
 
-      - name: Build React App
+      - name: Build React App 
         # CI=false 옵션: CI환경에서 실행될 때 발생하는 경고를 무시하는 옵션.
         run: CI=false npm run build # 프로덕션 빌드 생성
 

@@ -17,6 +17,7 @@ import axiosInstance from '../configs/axios-config';
 import AuthContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { handleAxiosError } from '../configs/HandleAxiosError';
+import { API_BASE_URL, ORDER } from '../configs/host-config';
 
 const OrderListComponent = ({ isAdmin }) => {
   const [orderList, setOrderList] = useState([]);
@@ -25,9 +26,7 @@ const OrderListComponent = ({ isAdmin }) => {
 
   const cancelOrder = async (id) => {
     try {
-      await axiosInstance.patch(
-        `${process.env.REACT_APP_API_BASE_URL}/order/${id}/cancel`,
-      );
+      await axiosInstance.patch(`${API_BASE_URL}${ORDER}/order/${id}/cancel`);
 
       // 주문 취소를 백엔드로 요청하고, 문제가 없었다면 주문 목록을 다시 렌더링
       setOrderList((prevList) => {
@@ -55,9 +54,7 @@ const OrderListComponent = ({ isAdmin }) => {
     const fetchOrders = async () => {
       const url = isAdmin ? '/order/list' : '/order/my-order';
       try {
-        const res = await axiosInstance.get(
-          `${process.env.REACT_APP_API_BASE_URL}${url}`,
-        );
+        const res = await axiosInstance.get(`${API_BASE_URL}${ORDER}${url}`);
 
         console.log(res.data);
         setOrderList(res.data.result);

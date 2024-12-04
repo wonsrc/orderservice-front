@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../configs/axios-config';
 import { handleAxiosError } from '../configs/HandleAxiosError';
 import AuthContext from '../context/UserContext';
+import { API_BASE_URL, PROD } from '../configs/host-config';
 
 const ProductCreate = () => {
   const [name, setName] = useState('');
@@ -38,15 +39,11 @@ const ProductCreate = () => {
       registerData.append('stockQuantity', stockQuantity);
       registerData.append('productImage', productImage);
 
-      await axiosInstance.post(
-        `${process.env.REACT_APP_API_BASE_URL}/product/create`,
-        registerData,
-        {
-          headers: {
-            'Content-type': 'multipart/form-data',
-          },
+      await axiosInstance.post(`${API_BASE_URL}${PROD}/create`, registerData, {
+        headers: {
+          'Content-type': 'multipart/form-data',
         },
-      );
+      });
 
       alert('상품 등록 완료!');
       navigate('/product/list');
